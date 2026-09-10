@@ -119,9 +119,9 @@ def write(fname, title, body):
     page = Path(fname).stem
     css_path = ROOT/"css"/f"{page}.css"
     css_path.parent.mkdir(parents=True, exist_ok=True)
-    css_path.write_text(CSS, encoding="utf-8")
+    css_path.write_text(CSS, encoding="utf-8", newline="\n")
     html = HEAD.format(title=title, page=page) + body + FOOT
-    (ROOT/fname).write_text(html, encoding="utf-8")
+    (ROOT/fname).write_text(html, encoding="utf-8", newline="\n")
     print("wrote", fname, "bytes", len(html), "+", f"css/{page}.css")
 
 write("index.html", "Home", f'''

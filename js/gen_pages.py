@@ -54,22 +54,22 @@ FOOT = '''
 </main>
 <div id="site-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-document.addEventListener("click", function (e) {
-  var m = document.getElementById("mnav");
-  if (e.target.closest("#burger")) { e.preventDefault(); m && m.classList.add("is-open"); document.body.classList.add("no-scroll"); }
-  if (e.target.closest("#mnavClose") || e.target.closest("#mnav a")) { m && m.classList.remove("is-open"); document.body.classList.remove("no-scroll"); }
-});
-</script>
+<script src="js/nav.js"></script>
 <script src="js/terra.js"></script>
-{extra}
+{page_script}
 </body>
 </html>
 '''
 
 def write(fname, title, pagename, body, extra=""):
-    html = HEAD.format(title=title, page=pagename) + body + FOOT.format(extra=extra)
-    (ROOT/fname).write_text(html)
+    page = Path(fname).stem
+    page_script = ""
+    if extra:
+        (ROOT/"js").mkdir(parents=True, exist_ok=True)
+        (ROOT/"js"/f"{page}.js").write_text(extra.strip("\n") + "\n", encoding="utf-8", newline="\n")
+        page_script = f'<script src="js/{page}.js"></script>'
+    html = HEAD.format(title=title, page=pagename) + body + FOOT.format(page_script=page_script)
+    (ROOT/fname).write_text(html, encoding="utf-8", newline="\n")
     print("wrote", fname)
 
 write("index.html","Home","home",'''
@@ -178,7 +178,7 @@ write("product.html","Product","pdp",'''
   <h2 class="h-sec" style="margin-bottom:24px">You may also like</h2>
   <div class="pg" data-grid></div>
 </div></section>
-''', extra='''<script>
+''', extra='''
 document.addEventListener("DOMContentLoaded",()=>{
   const id=new URLSearchParams(location.search).get("id")||"dress";
   const p=TERRA_CATALOG[id]; if(!p) return;
@@ -200,7 +200,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     for(let i=0;i<q;i++) terraAdd(id,size);
   };
 });
-</script>''')
+''')
 
 write("cart.html","Cart","cart",'''
 <div class="wrap page-hero">
@@ -253,10 +253,12 @@ write("checkout.html","Checkout","checkout",'''
     <div class="rowl" style="margin-top:16px"><span>Estimated total</span><b id="chkTotal">—</b></div>
   </aside>
 </div>
-''', extra='''<script>document.addEventListener("DOMContentLoaded",()=>{
+''', extra='''
+document.addEventListener("DOMContentLoaded",()=>{
   const t=terraCart().reduce((n,i)=>n+i.qty*i.price,0);
   const el=document.getElementById("chkTotal"); if(el) el.textContent="$"+t.toFixed(2);
-});</script>''')
+});
+''')
 
 write("thank-you.html","Thank you","thanks",'''
 <div class="wrap page-hero" style="text-align:center;max-width:640px;margin:0 auto;padding-bottom:var(--sec)">
@@ -290,14 +292,16 @@ write("login.html","Login","login",'''
     </form>
   </div>
 </div>
-''', extra='''<script>document.addEventListener("DOMContentLoaded",()=>{
+''', extra='''
+document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{
     document.querySelectorAll("[data-tab]").forEach(x=>x.classList.remove("is-on"));
     b.classList.add("is-on");
     formIn.hidden=b.dataset.tab!=="in";
     formUp.hidden=b.dataset.tab!=="up";
   });
-});</script>''')
+});
+''')
 
 write("account.html","My account","account",'''
 <div class="wrap page-hero"><h1 class="h-sec">My account</h1><p class="lede">Orders, addresses and details.</p></div>
@@ -325,12 +329,14 @@ write("account.html","My account","account",'''
 write("wishlist.html","Wishlist","wish",'''
 <div class="wrap page-hero"><h1 class="h-sec">Wishlist</h1><p class="lede">Pieces you are holding onto.</p></div>
 <div class="wrap" style="padding-bottom:var(--sec)"><div class="pg" id="wishGrid"></div></div>
-''', extra='''<script>document.addEventListener("DOMContentLoaded",()=>{
+''', extra='''
+document.addEventListener("DOMContentLoaded",()=>{
   const ids=JSON.parse(localStorage.getItem("terra_wish_v1")||"[]");
   const g=document.getElementById("wishGrid");
   const list=ids.map(id=>TERRA_CATALOG[id]).filter(Boolean);
   g.innerHTML=list.length?list.map(terraCard).join(''):'<p class="lede">Nothing saved yet. Tap the heart on any product.</p>';
-});</script>''')
+});
+''')
 
 write("about.html","About","about",'''
 <div class="wrap page-hero">
