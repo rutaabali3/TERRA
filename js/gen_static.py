@@ -1,6 +1,6 @@
 from pathlib import Path
 ROOT = Path("/home/user")
-CSS = Path("/home/user/css/terra.css").read_text()
+CSS = (ROOT/"css"/"terra.css").read_text()
 
 PRODUCTS = [
     dict(id="dress", name="Bias-Cut Linen Dress", cat="Clothing", price="$168.00", was="$210.00", img="images/dress.jpg", flag="Bestseller", href="product.html"),
@@ -39,9 +39,7 @@ HEAD = '''<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} — TERRA</title>
-<style>
-{css}
-</style>
+<link rel="stylesheet" href="css/{page}.css">
 </head>
 <body>
 <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
@@ -118,9 +116,13 @@ FOOT = '''
 '''
 
 def write(fname, title, body):
-    html = HEAD.format(title=title, css=CSS) + body + FOOT
-    (ROOT/fname).write_text(html)
-    print("wrote", fname, "bytes", len(html))
+    page = Path(fname).stem
+    css_path = ROOT/"css"/f"{page}.css"
+    css_path.parent.mkdir(parents=True, exist_ok=True)
+    css_path.write_text(CSS, encoding="utf-8")
+    html = HEAD.format(title=title, page=page) + body + FOOT
+    (ROOT/fname).write_text(html, encoding="utf-8")
+    print("wrote", fname, "bytes", len(html), "+", f"css/{page}.css")
 
 write("index.html", "Home", f'''
 <section class="hero"><div class="wrap hero__in">
